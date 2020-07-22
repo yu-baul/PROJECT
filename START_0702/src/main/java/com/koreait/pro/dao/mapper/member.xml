@@ -1,0 +1,221 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper 
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+<mapper namespace="com.koreait.pro.dao.MemberDAO">
+
+	<!-- 회원가입하기 -->
+	<insert id="signUpMember">
+		INSERT INTO MEMBER
+		VALUES
+		(MEMBER_SEQ.NEXTVAL, #{param1}, #{param2}, #{param3}, #{param4},
+		#{param5}, #{param6}, SYSDATE, 'BRONZE',0, 0, 1)
+	</insert>
+
+	<!-- 로그인 -->
+	<select id="selectBymIdmPw" resultType="com.koreait.pro.dto.MemberDTO">
+		SELECT * 
+		FROM MEMBER 
+		WHERE M_ID = #{param1} AND M_PW = #{param2}
+	</select>
+
+
+	<!-- 개인 정보 수정 -->
+	<update id="myViewUpdate">
+		UPDATE MEMBER SET
+		M_PW = #{param1}, M_NAME =
+		#{param2}, M_ADDRESS = #{param3}
+		WHERE M_ID = #{param4}
+	</update>
+
+	<!-- 가입 아이디 중복 확인 -->
+	<select id="selectBymId"
+		resultType="com.koreait.pro.dto.MemberDTO">
+		SELECT *
+		FROM MEMBER
+		WHERE M_ID = #{m_Id}
+	</select>
+
+	<!-- 가입 이메일 중복 확인 -->
+	<select id="selectBymEmail"
+		resultType="com.koreait.pro.dto.MemberDTO">
+		SELECT *
+		FROM MEMBER
+		WHERE M_EMAIL = #{m_Email}
+	</select>
+	<!-- 가입 핸드폰 번호 중복 확인 -->
+	<select id="selectBymPhone"
+		resultType="com.koreait.pro.dto.MemberDTO">
+		SELECT *
+		FROM MEMBER
+		WHERE M_Phone = #{m_Phone}
+	</select>
+
+
+	<!-- 비밀번호 찾기 체크 // 한덕구 -->
+	<select id="PWFindChk" resultType="int">
+		SELECT COUNT(*) FROM MEMBER
+		WHERE M_ID = #{param1}
+		AND M_EMAIL = #{param2}
+	</select>
+
+	<!-- 새 비밀번호 설정하기 한덕구 -->
+	<update id="setNewmPw">
+		UPDATE MEMBER
+		SET M_PW = #{param2}
+		WHERE
+		M_ID = #{param1}
+	</update>
+
+
+	<!-- 관리자 모드 회원리스트 불러오기 유바울 -->
+	<select id="memberList" resultType="com.koreait.pro.dto.MemberDTO">
+		SELECT *
+		FROM (SELECT ROWNUM RN, A.*
+		FROM (SELECT *
+		FROM MEMBER
+		WHERE M_ID != 'admin'
+		ORDER BY M_NO DESC) A)
+		WHERE RN BETWEEN #{beginRecord} AND #{endRecord}
+	</select>
+
+	<!-- 관리자 모드 회원리스트 검색된 결과 가져오기 -->
+	<select id="selectMember" resultType="com.koreait.pro.dto.MemberDTO">
+		SELECT *
+		FROM (SELECT ROWNUM RN, A.*
+		FROM (SELECT *
+		FROM MEMBER
+		WHERE ${param1} LIKE '%' || TRIM(#{param2}) || '%'
+		AND M_ID != 'admin'
+		ORDER BY M_NO DESC) A)
+		WHERE RN BETWEEN #{param3} AND #{param4}
+	</select>
+	<!-- 가입된 회원수 - 유바울 -->
+	<select id="getAllTotalRecord" resultType="int">
+		SELECT COUNT(*)
+		FROM
+		MEMBER
+	</select>
+	
+	<!-- 검색된 회원수 - 유바울  -->
+	<select id="getSelectTotalRecord" resultType="int">
+		SELECT COUNT(*)
+		FROM MEMBER
+		WHERE ${param1} LIKE '%' || TRIM(#{param2}) || '%'
+	</select>
+
+	<!-- 충전하기 - 김수범 -->
+	<update id="moneyCharge">
+		UPDATE MEMBER SET M_MONEY = M_MONEY + #{param2}
+		WHERE M_NO = #{param1} 
+	</update>
+
+	<!-- 구매자, 판매자 money 칼럼 업데이트 송원섭, 김수범 -->
+	<update id="MemberUpdatePrice1">
+		UPDATE MEMBER 
+		SET M_MONEY = M_MONEY - (SELECT P_PRICE FROM PRODUCT WHERE P_NO = #{param1})
+		WHERE M_NO = (SELECT B_NO FROM PRODUCT WHERE P_NO = #{param1}) 
+	</update>
+
+
+	<!-- 구매자, 판매자 money 칼럼 업데이트 송원섭, 김수범 -->
+	<update id="MemberUpdatePrice2">
+		UPDATE MEMBER
+		SET M_MONEY = M_MONEY + (SELECT P_PRICE FROM PRODUCT WHERE P_NO = #{param1})
+		WHERE M_NO = 1
+	</update>
+
+	<!-- 구매자, 판매자 money 칼럼 업데이트 송원섭, 김수범 -->
+	<update id="MemberUpdatePrice3">
+		UPDATE MEMBER
+		SET M_MONEY = M_MONEY + #{param2}
+		WHERE M_NO = (SELECT S_NO FROM PRODUCT WHERE P_NO = #{param1}) 
+	</update>
+
+	<!-- 관리자가 구매 승인시 관리자 돈 차감 -->
+	<update id="MemberUpdatePrice4">
+		UPDATE MEMBER
+		SET M_MONEY = M_MONEY - #{param1}
+		WHERE M_NO = 1 
+	</update>
+	
+	<!-- 판매자 아이디 확인 -->
+	<select id="selectMid" resultType="String">
+		SELECT M_ID 
+		FROM MEMBER 
+		WHERE M_NO = #{param1} 
+	</select>
+	
+		<!-- 포인트 적립  송원섭, 김수범 -->
+	<update id="MemberUpdatePoint">
+		UPDATE MEMBER 
+		SET M_POINT = M_POINT + #{param1}
+		WHERE M_NO = (SELECT B_NO FROM PRODUCT WHERE P_NO = #{param2})
+	</update>
+	
+	<!-- 등급 조정  송원섭, 김수범 -->
+	<update id="MemberUpdateGrade">
+		UPDATE MEMBER 
+		SET M_GRADE = CASE 
+		WHEN M_POINT >= 50000 THEN 'VVIP'
+		WHEN M_POINT >= 30000 THEN 'VIP'
+		WHEN M_POINT >= 20000 THEN 'GOLD'
+		WHEN M_POINT >= 10000 THEN 'SILVER'
+		ELSE 'BRONZE'
+		END
+		WHERE M_NO = (SELECT B_NO FROM PRODUCT WHERE P_NO = #{param1})
+	</update>
+	
+	<!-- 회원 번호로 찾기 김수범 -->
+	<select id="selectMemberBymNo" resultType="com.koreait.pro.dto.MemberDTO">
+		SELECT * 
+		FROM MEMBER 
+		WHERE M_NO = #{param1} 
+	</select>
+
+
+	<!-- 관리자 승인 취소시 구매자에게 돈 돌려주고 관리자 돈에서 차감 -->
+	<update id="AdminMinusMoney">
+		UPDATE MEMBER 
+		SET M_MONEY = M_MONEY - #{param1}
+		WHERE M_NO = 1
+	</update>
+	
+	<!-- 관리자 승인 취소시 구매자에게 돈 돌려주기 -->
+	<update id="MemberBackMoney">
+		UPDATE MEMBER 
+		SET M_MONEY = M_MONEY + #{param2}
+		WHERE M_NO = #{param1}
+	</update>
+	
+	<!-- 등급 확인 -->
+	<select id="getmGrade" resultType="String">
+		SELECT M_GRADE
+		FROM MEMBER
+		WHERE M_NO = (SELECT S_NO FROM PRODUCT WHERE P_NO = #{param1}) 
+	</select>
+	
+	<!-- 회원 탈퇴 -->
+	<update id="memberDelete">
+		UPDATE MEMBER 
+		SET M_STATE = 0 
+		WHERE M_NO = #{param1} 
+	</update>
+</mapper>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

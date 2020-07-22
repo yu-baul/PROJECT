@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper 
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+<mapper namespace="com.koreait.pro.dao.CartDAO">
+
+	<!-- 장바구니 목록 추가 -->
+	<insert id="cartInsert">
+		INSERT INTO CART
+		VALUES (CART_SEQ.NEXTVAL, #{param1}, #{param2})
+	</insert>
+	
+   	<select id="selectCartList"  resultType="com.koreait.pro.dto.CartDTO">
+		SELECT *
+		FROM (SELECT ROWNUM RN, A.*
+		FROM (SELECT C.C_NO, C.P_NO, P.P_IMG_PATH, P.P_NAME, P.P_PRICE, M.M_ID, P.P_STATE
+		FROM CART C 
+        INNER JOIN PRODUCT P
+		ON C.P_NO = P.P_NO
+        INNER JOIN MEMBER M
+        ON P.S_NO = M.M_NO
+        WHERE C.M_ID = #{m_Id} AND P.P_STATE != -1
+        ORDER BY C.C_NO	DESC ) A )
+        WHERE RN BETWEEN #{beginRecord} AND #{endRecord}
+	</select>
+	
+	<!-- 장바구니 목록 수 - 유바울 -->
+	<select id="getAllTotalRecord" resultType="int">
+		SELECT COUNT(*)
+		FROM CART C 
+        INNER JOIN PRODUCT P
+		ON C.P_NO = P.P_NO
+        INNER JOIN MEMBER M
+        ON P.S_NO = M.M_NO
+        WHERE C.M_ID = #{m_Id}
+	</select>
+	
+	<!-- 장바구니 목록 삭제 -->
+	<delete id="cartDelete">
+		DELETE FROM CART
+		WHERE C_NO = #{param1}
+	</delete>
+	
+	<!-- 장바구니에 담겨 있는지 확인 -->
+	<select id="selectCartByIdNo" resultType="com.koreait.pro.dto.CartDTO">
+		SELECT *
+		FROM CART
+		WHERE M_ID = #{param1} AND P_NO = #{param2}
+	</select>
+	
+	
+	
+
+</mapper>

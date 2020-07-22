@@ -1,0 +1,347 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper 
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+<mapper namespace="com.koreait.pro.dao.ProductDAO">
+
+	<!-- 상품 등록 -->
+	<insert id="productInsert">
+		INSERT INTO PRODUCT VALUES (PRODUCT_SEQ.NEXTVAL, #{param1}, NULL, #{param2}, #{param3}, #{param4}, #{param5}, #{param6}, SYSDATE, 0, 1)
+	</insert>
+
+	<!-- 메인페이지에 판매하는 상품 리스트 출력 -->
+	<select id="selectProductList"  resultType="com.koreait.pro.dto.ProductDTO">
+		SELECT *
+		FROM (SELECT ROWNUM RN, A.*
+		FROM (SELECT P.*, M.M_ID
+		FROM PRODUCT P INNER JOIN MEMBER M 
+		ON P.S_NO = M.M_NO
+		WHERE P.P_STATE = 1
+		ORDER BY P.P_NO DESC ) A)
+		WHERE RN BETWEEN #{beginRecord} AND #{endRecord}
+	</select>
+	
+	<!-- 메인페이지에 판매하는 상품 리스트 출력 개수  -->
+	<select id="getAllTotalRecord" resultType="int">
+		SELECT COUNT(*)
+		FROM PRODUCT P INNER JOIN MEMBER M 
+		ON P.S_NO = M.M_NO
+		WHERE P.P_STATE = 1
+	</select>
+	
+	<!-- 메인페이지에 판매하는 상품 리스트 검색 결과   -->
+	<select id="productSelectBymIdList" resultType="com.koreait.pro.dto.ProductDTO">
+		SELECT *
+		FROM (SELECT ROWNUM RN, A.*
+		FROM (SELECT PRODUCT.*, MEMBER.M_ID
+		FROM product INNER JOIN MEMBER
+		ON PRODUCT.S_NO = MEMBER.M_NO
+		WHERE S_NO = (SELECT M_NO 
+             		  FROM MEMBER
+                      WHERE M_ID = #{query}) ) A )
+        WHERE RN BETWEEN #{beginRecord} AND #{endRecord}
+	</select>
+	
+	<!-- 메인페이지에 판매하는 상품 리스트 검색 결과 수   -->
+	<select id="getSelectBymIdTotalRecord" resultType="int">
+		SELECT COUNT(*)
+		FROM PRODUCT
+		WHERE S_NO = (SELECT M_NO 
+             		  FROM MEMBER
+                      WHERE M_ID = #{query} )
+	</select>
+	
+	<!-- 메인페이지에 판매하는 상품 리스트 검색 결과   -->
+	<select id="productSelectBypNameList" resultType="com.koreait.pro.dto.ProductDTO">
+		SELECT *
+		FROM (SELECT ROWNUM RN, A.*
+		FROM (SELECT PRODUCT.*, MEMBER.M_ID
+		FROM product INNER JOIN MEMBER
+		ON PRODUCT.S_NO = MEMBER.M_NO
+		WHERE P_NAME LIKE '%' || TRIM(#{query}) || '%' ) A )
+        WHERE RN BETWEEN #{beginRecord} AND #{endRecord}
+	</select>
+	
+	<!-- 메인페이지에 판매하는 상품 리스트 검색 결과 수   -->
+	<select id="getSelectBypNameTotalRecord" resultType="int">
+		SELECT COUNT(*)
+		FROM PRODUCT
+		WHERE P_NAME LIKE '%' || TRIM(#{query}) || '%'
+	</select>
+	
+	
+	<!-- 이미지 클릭시 상품 정보 보기 -->
+	<select id="selectProductByNo" resultType="com.koreait.pro.dto.ProductDTO">
+		SELECT *
+		FROM PRODUCT 
+		WHERE P_NO = #{p_No}
+	</select>
+	
+	<!-- 구매 후 관리자 승인대기 -->
+    <update id="ProductUpdateState">
+       UPDATE PRODUCT
+       SET P_STATE = 2, B_NO = #{param1}
+       WHERE P_NO = #{param2}
+    </update>
+    
+    <!-- 관리자 승인 -->
+    <update id="ProductAgreeState">
+    	UPDATE PRODUCT
+    	SET P_STATE = -1 
+    	WHERE P_NO = #{param1} 
+    </update>
+    
+    <!-- 본인이 올린 상품 삭제 -->
+    <delete id="ProductDelete">
+    	DELETE 
+    	FROM PRODUCT
+    	WHERE P_NO = #{p_No}
+    </delete>
+	
+	<!-- 판매 상품 수정하기 -->
+   <update id="ProductUpdate">
+      UPDATE PRODUCT
+      SET P_NAME = #{param2}, P_CARTEGORY = #{param3}, P_CONTENT = #{param4}, P_PRICE = #{param5}, P_IMG_PATH = #{param6}
+      WHERE P_NO = #{param1}
+   </update>
+   
+   <!-- 구매 목록 출력 -->
+	<select id="selectProductBuyList" resultType="com.koreait.pro.dto.ProductDTO">
+	SELECT * 
+	FROM (SELECT ROWNUM RN, A.*
+	FROM (SELECT P.*, M.M_ID
+	FROM PRODUCT P INNER JOIN MEMBER M
+	ON P.S_NO = M.M_NO
+	WHERE P.B_NO = #{m_No} 
+	ORDER BY P.P_STATE DESC) A) 
+	WHERE RN BETWEEN #{beginRecord} AND #{endRecord} 
+	</select>
+
+	<!-- 구매 목록 수 -->
+ 	<select id="getBuyAllTotalRecord" resultType="int">
+ 		SELECT COUNT(*) 
+ 		FROM PRODUCT 
+ 		WHERE B_NO = #{M_NO} 
+ 	</select>
+ 	
+ 	<!-- 판매 목록 출력 -->
+	<select id="selectProductSellList" resultType="com.koreait.pro.dto.ProductDTO">
+		SELECT *
+		FROM (SELECT ROWNUM RN, A.*
+		FROM (SELECT *
+		FROM PRODUCT
+		WHERE S_NO = #{m_No} ) A)
+		WHERE RN BETWEEN #{beginRecord} AND #{endRecord} 
+	</select>
+
+	<!-- 판매 목록 수 -->
+	<select id="getSellAllTotalRecord" resultType="int">
+		SELECT COUNT(*)
+		FROM PRODUCT
+		WHERE S_NO = #{M_NO} 
+	</select>
+	
+	<!-- 관리자가 판매목록 보기 -->
+	<select id="productManagement" resultType="com.koreait.pro.dto.ProductDTO"> 
+		SELECT *
+		FROM (SELECT ROWNUM RN, A.*
+		FROM (SELECT P.*, M.M_ID
+		FROM PRODUCT P INNER JOIN MEMBER M 
+		ON P.S_NO = M.M_NO  ) A)
+		WHERE RN BETWEEN #{beginRecord} AND #{endRecord}
+	</select>
+	
+	<!-- 관리자가 판매목록 수 -->
+	<select id="getManagementTotalRecord" resultType="int">
+		SELECT COUNT(*)
+		FROM PRODUCT P INNER JOIN MEMBER M 
+		ON P.S_NO = M.M_NO
+	</select>
+	
+	<!-- 관리자가 판매목록 보기 p_State -->
+	<select id="productManagementState" resultType="com.koreait.pro.dto.ProductDTO"> 
+		SELECT *
+		FROM (SELECT ROWNUM RN, A.*
+		FROM (SELECT P.*, M.M_ID
+		FROM PRODUCT P INNER JOIN MEMBER M 
+		ON P.S_NO = M.M_NO 
+		WHERE P_STATE = #{p_State} ) A)
+		WHERE RN BETWEEN #{beginRecord} AND #{endRecord}
+	</select>
+	
+	<!-- 관리자가 판매목록 수 p_State -->
+	<select id="getManagementStateTotalRecord" resultType="int">
+		SELECT COUNT(*)
+		FROM PRODUCT P INNER JOIN MEMBER M 
+		ON P.S_NO = M.M_NO 
+		WHERE P_STATE = #{p_State}
+	</select>
+	
+	
+	<!-- 관리자가 판매목록 검색 결과 p_State m_Id   -->
+	<select id="productManagementStateBymId" resultType="com.koreait.pro.dto.ProductDTO">
+		SELECT *
+		FROM (SELECT ROWNUM RN, A.*
+		FROM (SELECT PRODUCT.*, MEMBER.M_ID
+		FROM product INNER JOIN MEMBER
+		ON PRODUCT.S_NO = MEMBER.M_NO
+		WHERE S_NO = (SELECT M_NO 
+             		  FROM MEMBER
+                      WHERE M_ID = #{query}) 
+        AND P_STATE = #{p_State}) A )
+        WHERE RN BETWEEN #{beginRecord} AND #{endRecord}
+	</select>
+	
+	<!-- 관리자가 판매목록 검색 결과 수  p_State m_Id   -->
+	<select id="getManagementStateBymIdTotalRecord" resultType="int">
+		SELECT COUNT(*)
+		FROM PRODUCT
+		WHERE S_NO = (SELECT M_NO 
+             		  FROM MEMBER
+                      WHERE M_ID = #{query} )
+        AND P_STATE = #{p_State}
+	</select>
+	
+	<!-- 관리자가 판매목록 검색 결과 p_State p_Name   -->
+	<select id="productManagementStateBypName" resultType="com.koreait.pro.dto.ProductDTO">
+		SELECT *
+		FROM (SELECT ROWNUM RN, A.*
+		FROM (SELECT PRODUCT.*, MEMBER.M_ID
+		FROM product INNER JOIN MEMBER
+		ON PRODUCT.S_NO = MEMBER.M_NO
+		WHERE P_NAME LIKE '%' || TRIM(#{query}) || '%' 
+		AND P_STATE = #{p_State} ) A )
+        WHERE RN BETWEEN #{beginRecord} AND #{endRecord}
+	</select>
+	
+	<!-- 관리자가 판매목록 검색 결과 수  p_State p_Name    -->
+	<select id="getManagementStateBypNameTotalRecord" resultType="int">
+		SELECT COUNT(*)
+		FROM PRODUCT
+		WHERE P_NAME LIKE '%' || TRIM(#{query}) || '%'
+		AND P_STATE = #{p_State}
+	</select>
+
+	<!-- 카테고리 리스트 보기 -->
+	<select id="productCartegory" resultType="com.koreait.pro.dto.ProductDTO">
+		SELECT *
+		FROM (SELECT ROWNUM RN, A.*
+		FROM (SELECT P.*, M.M_ID
+		FROM PRODUCT P INNER JOIN MEMBER M
+		ON P.S_NO = M.M_NO
+		WHERE P.P_STATE=1 AND P.P_CARTEGORY=#{p_Cartegory} ) A)
+		WHERE RN BETWEEN #{beginRecord} AND #{endRecord}
+	</select>
+	
+	<!-- 카테고리 리스트 개수 -->
+	<select id="getCartegoryAllTotalRecord" resultType="int">
+		SELECT	COUNT(*)
+		FROM PRODUCT P INNER JOIN MEMBER M
+		ON P.S_NO = M.M_NO
+		WHERE P.P_STATE=1 AND P.P_CARTEGORY=#{p_Cartegory}
+	</select>
+	
+	<!-- 카테고리 검색목록 m_Id -->
+	<select id="productCartegoryBymId" resultType="com.koreait.pro.dto.ProductDTO">
+		SELECT *
+		FROM (SELECT ROWNUM RN, A.*
+			  FROM (SELECT P.*, M.M_ID
+					FROM PRODUCT P INNER JOIN MEMBER M
+					ON P.S_NO = M.M_NO
+					WHERE P.P_STATE = 1 AND P.P_CARTEGORY = #{p_Cartegory} 
+					AND M.M_ID = #{query}) A)
+		WHERE RN BETWEEN #{beginRecord} AND #{endRecord}
+		<!-- SELECT *
+		FROM (SELECT ROWNUM RN, A.*
+			  FROM (SELECT P.*, M.M_ID
+					FROM PRODUCT P INNER JOIN MEMBER M
+					ON P.S_NO = M.M_NO
+					WHERE P.P_STATE = 1 AND P.P_CARTEGORY = #{p_Cartegory} 
+					AND P.S_NO = (SELECT M_NO 
+             		  FROM MEMBER
+                      WHERE M_ID = #{query}) ) A)
+		WHERE RN BETWEEN #{beginRecord} AND #{endRecord} -->
+	</select>
+	
+	<!-- 카테고리 검색목록 수 m_Id -->
+	<select id="getCartegoryBymIdTotalRecord" resultType="int">
+		SELECT COUNT(*)
+		FROM PRODUCT P INNER JOIN MEMBER M
+		ON P.S_NO = M.M_NO
+		WHERE P.P_STATE=1 AND P.P_CARTEGORY=#{p_Cartegory} 
+		AND P.S_NO = (SELECT M_NO 
+             		  FROM MEMBER
+                      WHERE M_ID = #{query})
+	</select>
+	
+	<!-- 카테고리 검색목록  p_Name-->
+	<select id="productCartegoryBypName" resultType="com.koreait.pro.dto.ProductDTO">
+		SELECT *
+		FROM (SELECT ROWNUM RN, A.*
+			  FROM (SELECT P.*, M.M_ID
+					FROM PRODUCT P INNER JOIN MEMBER M
+					ON P.S_NO = M.M_NO
+					WHERE P.P_STATE = 1 AND P.P_CARTEGORY = #{p_Cartegory} 
+					AND P_NAME LIKE '%' || TRIM(#{query}) || '%') A)
+		WHERE RN BETWEEN #{beginRecord} AND #{endRecord}
+		<!-- SELECT *
+		FROM (SELECT ROWNUM RN, A.*
+			  FROM (SELECT P.*, M.M_ID
+					FROM PRODUCT P INNER JOIN MEMBER M
+					ON P.S_NO = M.M_NO
+					WHERE P.P_STATE = 1 AND P.P_CARTEGORY = #{p_Cartegory} 
+					AND P.S_NO = (SELECT M_NO 
+             		  FROM MEMBER
+                      WHERE M_ID = #{query}) ) A)
+		WHERE RN BETWEEN #{beginRecord} AND #{endRecord} -->
+	</select>
+	
+	<!-- 카테고리 검색목록 수 p_Name -->
+	<select id="getCartegoryBypNameTotalRecord" resultType="int">
+		SELECT COUNT(*)
+		FROM PRODUCT P INNER JOIN MEMBER M
+		ON P.S_NO = M.M_NO
+		WHERE P.P_STATE=1 AND P.P_CARTEGORY=#{p_Cartegory} 
+		AND P_NAME LIKE '%' || TRIM(#{query}) || '%'
+	</select>
+	
+	
+	<!-- 조회수 업데이트 -->
+	<update id="updateHit">
+		UPDATE PRODUCT
+		SET P_HIT = P_HIT + 1
+		WHERE P_NO = #{param1}
+	</update>
+	
+	<!-- 관리자 승인취소 -->
+	<update id="ProductCancle">
+		UPDATE PRODUCT
+		SET B_NO = NULL, P_STATE = 1
+		WHERE P_NO = #{param1}
+	</update>
+	
+	
+</mapper>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

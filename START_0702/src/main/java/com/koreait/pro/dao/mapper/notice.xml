@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper 
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+<mapper namespace="com.koreait.pro.dao.NoticeDAO">
+
+	<!-- 공지사항 목록 전체 가져오기 - 유바울 -->
+	<select resultType="com.koreait.pro.dto.NoticeDTO" id="selectNoticeList">
+		SELECT * 
+		FROM (SELECT ROWNUM RN, A.*
+		FROM (SELECT *
+		FROM NOTICE 
+		ORDER BY N_NO DESC) A) 
+		WHERE RN BETWEEN #{beginRecord} AND #{endRecord} 
+	</select>
+	
+	<!-- 공지사항의 글 개수 -유바울 -->
+	<select resultType="int" id="getAllTotalRecord">
+		SELECT COUNT(*) 
+		FROM NOTICE 
+	</select>
+		
+	<!-- 공지사항 내용 보기 -->
+	<select id="selectNoticeByn_No" resultType="com.koreait.pro.dto.NoticeDTO">
+		SELECT *
+		FROM NOTICE
+		WHERE N_NO = #{n_No}
+	</select>
+	
+	<!-- 공지사항 수정 (관리자) -->
+	<update id="NoticeUpdate">
+		UPDATE NOTICE
+		SET N_TITLE = #{param1}, N_CONTENT = #{param2}, N_DATE = SYSDATE
+		WHERE N_NO = #{param3}
+	</update>
+	
+	<!-- 공지사항 삭제 (관리자) -->
+	<delete id="NoticeDelete">
+		DELETE FROM NOTICE
+		WHERE N_NO = #{n_No}
+	</delete>
+	
+	<!-- 공지사항 삽입 (관리자) -->
+	<insert id="NoticeInsert">
+		INSERT INTO NOTICE
+		VALUES (NOTICE_SEQ.NEXTVAL, 1, #{param1}, #{param2}, SYSDATE)
+	</insert>
+	
+	
+	
+
+</mapper>

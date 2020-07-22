@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper 
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+<mapper namespace="com.koreait.pro.dao.Qna_aDAO">
+	
+	<!-- 관리자 1:1 문의 답글 달기 - 유바울 -->
+	<insert id="qna_aInsert" >
+	
+		INSERT INTO QNA_A
+		VALUES (QNA_A_SEQ.NEXTVAL, #{param1}, #{param2}, SYSDATE)
+	
+	</insert>
+	
+	<!-- 관리자 1:1 문의 답글 달린 유저 답글 글 보여주기 -->
+	<select id="qna_aSelectView" resultType="com.koreait.pro.dto.Qna_ADTO">
+		SELECT *
+		FROM QNA_A
+		WHERE Q_NO = #{param1}
+	</select>
+	
+</mapper>
